@@ -1,0 +1,24 @@
+-- 1. 创建数据库
+CREATE DATABASE IF NOT EXISTS ro_user_db
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+-- 2. 切换到user_db
+USE ro_user_db;
+
+-- 3. 创建用户表
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
+    username VARCHAR(50) UNIQUE NOT NULL COMMENT '用户名',
+    password VARCHAR(100) NOT NULL COMMENT '密码',
+    phone VARCHAR(20) COMMENT '手机号',
+    email VARCHAR(100) COMMENT '邮箱',
+    nickname VARCHAR(50) COMMENT '昵称',
+    avatar VARCHAR(255) COMMENT '头像URL',
+    role VARCHAR(20) DEFAULT 'CUSTOMER' COMMENT '角色：CUSTOMER-顾客，KITCHEN-后厨，ADMIN-管理员',
+    status VARCHAR(20) DEFAULT 'ACTIVE' COMMENT '状态：ACTIVE-激活，DISABLED-禁用',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_username (username),
+    INDEX idx_phone (phone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
