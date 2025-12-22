@@ -14,6 +14,9 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 
+# 设置时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
 # 复制jar文件
 COPY --from=builder /app/target/user-service-*.jar app.jar
 

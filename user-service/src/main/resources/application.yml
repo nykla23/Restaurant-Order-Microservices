@@ -18,7 +18,7 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://mysql-user:3306/ro_user_db?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://mysql-ro-user:3306/ro_user_db?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
     password: root123
     driver-class-name: com.mysql.cj.jdbc.Driver
