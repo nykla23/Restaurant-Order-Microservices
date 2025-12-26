@@ -1,19 +1,25 @@
 version: '3.8'
 services:
-  # MySQL for user-service
-  mysql-user:
+
+  mysql:
     image: mysql:8.4
-    container_name: mysql-ro-user
+    container_name: ro-user-service-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: ro_user_db
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./mysql-user-data:/var/lib/mysql
     networks:
       - restaurant-network
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # Nacos
   nacos:
@@ -22,31 +28,37 @@ services:
     environment:
       - MODE=standalone
       - SPRING_DATASOURCE_PLATFORM=mysql
-      - MYSQL_SERVICE_HOST=mysql-user
+      - MYSQL_SERVICE_HOST=mysql
       - MYSQL_SERVICE_DB_NAME=nacos_config
       - MYSQL_SERVICE_PORT=3306
       - MYSQL_SERVICE_USER=root
-      - MYSQL_SERVICE_PASSWORD=root123
+      - MYSQL_SERVICE_PASSWORD=root_password
+      - NACOS_AUTH_ENABLE=false
+      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
     ports:
       - "8848:8848"
       - "9848:9848"
       - "9849:9849"
     depends_on:
-      - mysql-ro-user
+      - mysql
     networks:
       - restaurant-network
     restart: unless-stopped
 
   # User Service（如果要从Docker运行）
   user-service:
-    build: .
-    container_name: user-service
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: ro-user-service
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - mysql-ro-user
+      - mysql
       - nacos
     volumes:
       - ./logs:/app/logs

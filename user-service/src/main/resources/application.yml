@@ -1,26 +1,15 @@
 server:
   port: 8081
 
+
 spring:
   application:
     name: user-service
-  cloud:
-    nacos:
-      discovery:
-        server-addr: nacos:8848
-      config:
-        server-addr: nacos:8848
-        file-extension: yaml
-        namespace: dev
-        group: DEFAULT_GROUP
-        refresh-enabled: true
-  profiles:
-    active: dev
 
   datasource:
-    url: jdbc:mysql://mysql-ro-user:3306/ro_user_db?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3307/ro_user_db?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: root123
+    password: root_password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # 连接池配置
