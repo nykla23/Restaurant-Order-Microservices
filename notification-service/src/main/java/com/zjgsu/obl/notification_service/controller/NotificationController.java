@@ -1,8 +1,8 @@
 package com.zjgsu.obl.notification_service.controller;
 import com.zjgsu.obl.notification_service.common.ApiResponse;
-import com.zjgsu.obl.notification_service.dto.nafication.CreateNotificationRequest;
-import com.zjgsu.obl.notification_service.dto.nafication.NotificationCountDTO;
-import com.zjgsu.obl.notification_service.dto.nafication.NotificationDTO;
+import com.zjgsu.obl.notification_service.dto.notification.CreateNotificationRequest;
+import com.zjgsu.obl.notification_service.dto.notification.NotificationCountDTO;
+import com.zjgsu.obl.notification_service.dto.notification.NotificationDTO;
 import com.zjgsu.obl.notification_service.service.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

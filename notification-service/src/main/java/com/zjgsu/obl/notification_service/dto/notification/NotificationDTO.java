@@ -1,4 +1,4 @@
-package com.zjgsu.obl.notification_service.dto.nafication;
+package com.zjgsu.obl.notification_service.dto.notification;
 import com.zjgsu.obl.notification_service.model.Notification;
 import lombok.Data;
 

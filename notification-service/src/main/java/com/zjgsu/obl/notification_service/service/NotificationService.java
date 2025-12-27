@@ -1,14 +1,22 @@
 package com.zjgsu.obl.notification_service.service;
 
-import com.zjgsu.obl.notification_service.dto.nafication.CreateNotificationRequest;
-import com.zjgsu.obl.notification_service.dto.nafication.NotificationCountDTO;
-import com.zjgsu.obl.notification_service.dto.nafication.NotificationDTO;
+import com.zjgsu.obl.notification_service.client.DishClient;
+import com.zjgsu.obl.notification_service.client.OrderClient;
+import com.zjgsu.obl.notification_service.dto.DishDTO;
+import com.zjgsu.obl.notification_service.dto.OrderDTO;
+import com.zjgsu.obl.notification_service.dto.notification.CreateNotificationRequest;
+import com.zjgsu.obl.notification_service.dto.notification.NotificationCountDTO;
+import com.zjgsu.obl.notification_service.dto.notification.NotificationDTO;
 import com.zjgsu.obl.notification_service.model.Notification;
+import com.zjgsu.obl.notification_service.model.event.InventoryWarningEvent;
+import com.zjgsu.obl.notification_service.model.event.OrderCreatedEvent;
+import com.zjgsu.obl.notification_service.model.event.OrderStatusChangedEvent;
 import com.zjgsu.obl.notification_service.respository.NotificationRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,11 +37,19 @@ public class NotificationService {
     @Autowired
     private HttpServletRequest request;
 
-    @Autowired
-    private OrderService orderService;
+//    @Autowired
+//    private OrderService orderService;
+//
+//    @Autowired
+//    private DishService dishService;
+    @Value("${order.service.url}")
+    private String orderServiceUrl;
 
     @Autowired
-    private DishService dishService;
+    private OrderClient orderClient;
+
+    @Autowired
+    private DishClient dishClient;
 
 
     /**
@@ -294,14 +310,14 @@ public class NotificationService {
         // 根据通知类型添加额外信息
         if ("ORDER".equals(notification.getType()) && "ORDER".equals(notification.getRelatedType())) {
             try {
-                OrderDTO order = orderService.getOrderById(notification.getRelatedId());
+                OrderDTO order = orderClient.getOrderById(notification.getRelatedId());
                 dto.setExtraInfo(new OrderExtraInfo(order.getOrderNumber(), order.getStatus()));
             } catch (Exception e) {
                 log.warn("获取订单额外信息失败，订单ID: {}", notification.getRelatedId(), e);
             }
         } else if ("INVENTORY".equals(notification.getType()) && "DISH".equals(notification.getRelatedType())) {
             try {
-                DishDTO dish = dishService.getDishById(notification.getRelatedId());
+                DishDTO dish = dishClient.getDishById(notification.getRelatedId());
                 dto.setExtraInfo(new DishExtraInfo(dish.getName(), dish.getStock()));
             } catch (Exception e) {
                 log.warn("获取菜品额外信息失败，菜品ID: {}", notification.getRelatedId(), e);

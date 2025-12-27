@@ -1,4 +1,4 @@
-package com.zjgsu.obl.notification_service.dto.nafication;
+package com.zjgsu.obl.notification_service.dto.notification;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
