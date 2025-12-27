@@ -1,4 +1,5 @@
 package com.zjgsu.obl.order_service.service;
+import com.zjgsu.obl.order_service.client.UserClient;
 import com.zjgsu.obl.order_service.dto.RevenueReportDTO;
 import com.zjgsu.obl.order_service.dto.statistics.StatisticsDTO;
 import com.zjgsu.obl.order_service.model.Dish;
@@ -27,8 +28,8 @@ public class StatisticsService {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+//    @Autowired
+//    private UserRepository userRepository;
 
     @Autowired
     private DishRepository dishRepository;
@@ -39,6 +40,9 @@ public class StatisticsService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
+    @Autowired
+    private UserClient userClient;
+
     /**
      * 获取统计概览
      */
@@ -48,7 +52,7 @@ public class StatisticsService {
         StatisticsDTO stats = new StatisticsDTO();
 
         // 基础统计
-        stats.setTotalUsers(userRepository.count());
+        stats.setTotalUsers(userClient.countUsers());
         stats.setTotalOrders(orderRepository.count());
         stats.setTotalDishes(dishRepository.count());
 
@@ -76,8 +80,7 @@ public class StatisticsService {
         stats.setTodayRevenue(todayRevenue);
 
         // 今日新增用户
-        List<User> todayUsers = userRepository.findByCreatedAtBetween(todayStart, todayEnd);
-        stats.setTodayNewUsers((long) todayUsers.size());
+        stats.setTodayNewUsers(userClient.countNewUsers(todayStart, todayEnd)); // 使用UserClient获取新用户总数
 
         // 订单状态统计
         stats.setOrderStatusStats(getOrderStatusStats());
@@ -179,8 +182,7 @@ public class StatisticsService {
             daily.setRevenue(dailyRevenue);
 
             // 当日新增用户
-            List<User> dailyUsers = userRepository.findByCreatedAtBetween(startDate, endDate);
-            daily.setNewUsers((long) dailyUsers.size());
+            daily.setNewUsers(userClient.countNewUsers(startDate, endDate)); // 使用UserClient获取新用户总数
 
             trend.add(daily);
         }

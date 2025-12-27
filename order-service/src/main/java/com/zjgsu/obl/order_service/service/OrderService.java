@@ -1,4 +1,5 @@
 package com.zjgsu.obl.order_service.service;
+import com.zjgsu.obl.order_service.client.UserClient;
 import com.zjgsu.obl.order_service.dto.dish.DishDTO;
 import com.zjgsu.obl.order_service.dto.order.*;
 import com.zjgsu.obl.order_service.event.EventPublisher;
@@ -11,6 +12,7 @@ import com.zjgsu.obl.order_service.respository.PaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +38,17 @@ public class OrderService {
     @Autowired
     private DishService dishService;
 
-    @Autowired
-    private UserRepository userRepository;
+//    @Autowired
+//    private UserRepository userRepository;
 
     @Autowired
     private EventPublisher eventPublisher;
+
+    @Value("${user.service.url}")
+    private String userServiceUrl;
+
+    @Autowired
+    private UserClient userClient;
 
     /**
      * 创建订单
@@ -50,8 +58,7 @@ public class OrderService {
         log.info("创建订单，用户ID: {}", request.getUserId());
 
         // 验证用户是否存在
-        userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        userClient.getUserById(request.getUserId());
 
         // 创建订单实体
         Order order = new Order();
