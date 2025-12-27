@@ -5,10 +5,10 @@ import com.zjgsu.obl.user_service.dto.user.UserDTO;
 import com.zjgsu.obl.user_service.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
 
 @RestController
 @RequestMapping("/api/users")
@@ -37,4 +37,27 @@ public class UserController {
         UserDTO userDTO = userService.getCurrentUser();
         return ApiResponse.success(userDTO);
     }
+
+    /**
+     * 获取用户总数
+     */
+    @GetMapping("/count")
+    public ApiResponse<Long> countUsers() {
+        log.info("获取用户总数");
+        long count = userService.countUsers();
+        return ApiResponse.success(count);
+    }
+
+    /**
+     * 获取指定时间范围内的新用户总数
+     */
+    @GetMapping("/count")
+    public ApiResponse<Long> countNewUsers(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date endDate) {
+        log.info("获取指定时间范围内的新用户总数: {} - {}", startDate, endDate);
+        long count = userService.countNewUsers(startDate, endDate);
+        return ApiResponse.success(count);
+    }
+
 }

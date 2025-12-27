@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -124,5 +125,19 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
         return UserDTO.fromEntity(user);
+    }
+
+    /**
+     * 获取用户总数
+     */
+    public long countUsers() {
+        return userRepository.count();
+    }
+
+    /**
+     * 获取指定时间范围内的新用户总数
+     */
+    public long countNewUsers(Date startDate, Date endDate) {
+        return userRepository.countByCreatedAtBetween(startDate, endDate);
     }
 }
