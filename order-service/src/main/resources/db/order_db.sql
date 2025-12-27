@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS categories (
     is_active BOOLEAN DEFAULT true COMMENT '是否启用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     UNIQUE KEY uk_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜品分类表';
+);
 
 -- 菜品表
 CREATE TABLE IF NOT EXISTS dishes (
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS dishes (
     INDEX idx_is_popular (is_popular),
     INDEX idx_is_available (is_available),
     FOREIGN KEY (category_id) REFERENCES categories(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜品表';
+);
 
 -- 库存变更日志表
 CREATE TABLE IF NOT EXISTS inventory_logs (
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS inventory_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     INDEX idx_dish_id (dish_id),
     FOREIGN KEY (dish_id) REFERENCES dishes(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存变更日志表';
+);
 
 -- 订单表
 CREATE TABLE IF NOT EXISTS orders (
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS orders (
     INDEX idx_user_id (user_id),
     INDEX idx_status (status),
     INDEX idx_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
+);
 
 -- 订单项表
 CREATE TABLE IF NOT EXISTS order_items (
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     INDEX idx_dish_id (dish_id),
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (dish_id) REFERENCES dishes(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单项表';
+);
 
 -- 支付记录表
 CREATE TABLE IF NOT EXISTS payments (
@@ -93,10 +93,12 @@ CREATE TABLE IF NOT EXISTS payments (
     status VARCHAR(20) DEFAULT 'PENDING' COMMENT '状态：PENDING-待支付，SUCCESS-成功，FAILED-失败，REFUNDED-已退款',
     payment_method VARCHAR(20) COMMENT '支付方式：CASH-现金，WECHAT-微信，ALIPAY-支付宝，CARD-银行卡',
     transaction_id VARCHAR(100) COMMENT '第三方交易ID',
+    payer_id VARCHAR(50) COMMENT '付款人ID',
+    payer_info TEXT COMMENT '付款人信息',
     paid_at TIMESTAMP NULL COMMENT '支付时间',
     refunded_at TIMESTAMP NULL COMMENT '退款时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_order_id (order_id),
     INDEX idx_payment_number (payment_number)
-) ENGINE=Innodb DEFAULT CHARSET=utf8mb4 COMMENT='支付记录表';
+);
