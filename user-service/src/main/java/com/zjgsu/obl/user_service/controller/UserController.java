@@ -51,7 +51,7 @@ public class UserController {
     /**
      * 获取指定时间范围内的新用户总数
      */
-    @GetMapping("/count")
+    @GetMapping("/count/new")
     public ApiResponse<Long> countNewUsers(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date endDate) {

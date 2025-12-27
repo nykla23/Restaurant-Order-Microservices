@@ -44,9 +44,6 @@ public class OrderService {
     @Autowired
     private EventPublisher eventPublisher;
 
-    @Value("${user.service.url}")
-    private String userServiceUrl;
-
     @Autowired
     private UserClient userClient;
 

@@ -1,6 +1,7 @@
 package com.zjgsu.obl.order_service.exception;
 
-import com.zjgsu.obl.Restaurant_Order.common.ApiResponse;
+
+import com.zjgsu.obl.order_service.common.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

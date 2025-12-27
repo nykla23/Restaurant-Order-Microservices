@@ -13,7 +13,7 @@ public class UserClient {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${user.service.url}")
+    @Value("${user-service.url}")
     private String userServiceUrl;
 
     public void getUserById(Long userId) {
@@ -35,11 +35,11 @@ public class UserClient {
     }
 
     public long countNewUsers(Date startDate, Date endDate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         String start = startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).format(formatter);
         String end = endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).format(formatter);
 
-        String url = userServiceUrl + "/api/users/count?startDate=" + start + "&endDate=" + end;
+        String url = userServiceUrl + "/count/new?startDate=" + start + "&endDate=" + end;
         try {
             return restTemplate.getForObject(url, Long.class);
         } catch (Exception e) {

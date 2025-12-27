@@ -42,8 +42,6 @@ public class NotificationService {
 //
 //    @Autowired
 //    private DishService dishService;
-    @Value("${order.service.url}")
-    private String orderServiceUrl;
 
     @Autowired
     private OrderClient orderClient;
