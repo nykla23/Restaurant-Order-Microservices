@@ -35,15 +35,6 @@ public class NotificationService {
     private NotificationRepository notificationRepository;
 
     @Autowired
-    private HttpServletRequest request;
-
-//    @Autowired
-//    private OrderService orderService;
-//
-//    @Autowired
-//    private DishService dishService;
-
-    @Autowired
     private OrderClient orderClient;
 
     @Autowired

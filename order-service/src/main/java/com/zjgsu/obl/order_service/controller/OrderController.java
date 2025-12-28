@@ -26,9 +26,15 @@ public class OrderController {
      * 创建订单
      */
     @PostMapping
-    public ApiResponse<OrderDTO> createOrder(@Valid @RequestBody CreateOrderRequest request) {
-        log.info("创建订单，用户ID: {}", request.getUserId());
-        OrderDTO order = orderService.createOrder(request);
+    public ApiResponse<OrderDTO> createOrder(
+            @RequestBody CreateOrderRequest request,
+            @RequestHeader("X-User-Id") String userIdStr,
+            @RequestHeader("X-User-Role") String userRole) {
+
+        Long userId = Long.parseLong(userIdStr);
+
+        log.info("用户 {} (角色: {}) 创建订单", userId, userRole);
+        OrderDTO order = orderService.createOrder(request,userId);
         return ApiResponse.success("订单创建成功", order);
     }
 
@@ -120,4 +126,32 @@ public class OrderController {
         OrderStatistics stats = orderService.getStatistics();
         return ApiResponse.success(stats);
     }
+
+    /**
+     * 获取当前用户的订单
+     */
+    @GetMapping("/my")
+    public ApiResponse<List<OrderDTO>> getMyOrders(
+            @RequestHeader("X-User-Id") String userIdStr) {
+
+        Long userId = Long.parseLong(userIdStr);
+        List<OrderDTO> orders = orderService.getUserOrders(userId);
+        return ApiResponse.success(orders);
+    }
+
+    /**
+     * 管理员获取所有订单
+     */
+    @GetMapping
+    public ApiResponse<List<OrderDTO>> getAllOrders(
+            @RequestHeader("X-User-Role") String userRole) {
+
+        if (!"ADMIN".equals(userRole)) {
+            return ApiResponse.error(400,"需要管理员权限");
+        }
+
+        List<OrderDTO> orders = orderService.getAllOrders(userRole);
+        return ApiResponse.success(orders);
+    }
+
 }

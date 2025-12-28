@@ -75,9 +75,12 @@ public class UserService {
             throw new RuntimeException("用户已被禁用");
         }
 
-        // 生成Token
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
-
+        // 生成Token - 传入userId
+        String token = jwtUtil.generateToken(
+                user.getUsername(),
+                user.getRole(),
+                user.getId()  // 传入userId
+        );
         // 创建响应
         LoginResponse response = new LoginResponse();
         response.setToken(token);
@@ -88,16 +91,11 @@ public class UserService {
     }
 
     /**
-     * 查询用户信息（带权限控制）
+     * 查询用户信息（网关已验证权限，这里只需要做最终检查）
      */
     public UserDTO getUserById(Long userId) {
-        // 从请求头中获取当前用户信息
-        String currentUsername = (String) request.getAttribute("username");
-        String currentUserRole = (String) request.getAttribute("role");
-        Long currentUserId = (Long) request.getAttribute("userId");
-
-        log.info("查询用户 - 请求者: {} (角色: {}, ID: {}), 目标用户ID: {}",
-                currentUsername, currentUserRole, currentUserId, userId);
+        log.info("查询用户 - 请求者ID: {} (角色: {}), 目标用户ID: {}",
+                currentUserId, currentUserRole, userId);
 
         // 查找目标用户
         User targetUser = userRepository.findById(userId)
@@ -114,14 +112,8 @@ public class UserService {
     /**
      * 查询当前登录用户自己的信息
      */
-    public UserDTO getCurrentUser() {
-        Long currentUserId = (Long) request.getAttribute("userId");
-
-        if (currentUserId == null) {
-            throw new RuntimeException("用户未登录");
-        }
-
-        User user = userRepository.findById(currentUserId)
+    public UserDTO getCurrentUser(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
         return UserDTO.fromEntity(user);
@@ -139,5 +131,12 @@ public class UserService {
      */
     public long countNewUsers(Date startDate, Date endDate) {
         return userRepository.countByCreatedAtBetween(startDate, endDate);
+    }
+
+    /**
+     * 内部服务API：验证用户存在性
+     */
+    public boolean userExists(Long userId) {
+        return userRepository.existsById(userId);
     }
 }

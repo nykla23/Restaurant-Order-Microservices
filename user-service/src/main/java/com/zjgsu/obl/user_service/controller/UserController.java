@@ -22,8 +22,12 @@ public class UserController {
      * 查询指定用户（需要权限：管理员或用户自己）
      */
     @GetMapping("/{userId}")
-    public ApiResponse<UserDTO> getUser(@PathVariable Long userId) {
-        log.info("查询用户: {}", userId);
+    public ApiResponse<UserDTO> getUser(@PathVariable Long userId,
+                                        @RequestHeader("X-User-Id") String currentUserIdStr,
+                                        @RequestHeader("X-User-Role") String currentUserRole) {
+        log.info("查询用户: {}, 请求者: {} (角色: {})", userId, currentUserIdStr, currentUserRole);
+        Long currentUserId = Long.parseLong(currentUserIdStr);
+
         UserDTO userDTO = userService.getUserById(userId);
         return ApiResponse.success(userDTO);
     }
@@ -32,9 +36,11 @@ public class UserController {
      * 查询当前登录用户自己的信息
      */
     @GetMapping("/me")
-    public ApiResponse<UserDTO> getCurrentUser() {
-        log.info("查询当前用户");
-        UserDTO userDTO = userService.getCurrentUser();
+    public ApiResponse<UserDTO> getCurrentUser(@RequestHeader("X-User-Id") String userIdStr) {
+        Long userId = Long.parseLong(userIdStr);
+        log.info("查询当前用户: {}", userId);
+
+        UserDTO userDTO = userService.getCurrentUser(userId);
         return ApiResponse.success(userDTO);
     }
 

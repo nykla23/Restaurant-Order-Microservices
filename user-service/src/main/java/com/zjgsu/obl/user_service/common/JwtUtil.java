@@ -27,20 +27,19 @@ public class JwtUtil {
     @Autowired
     private UserRepository userRepository;
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, Long userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        Long userId = userOpt.map(User::getId).orElse(null);
-
+        // 直接从参数获取userId，不再查询数据库
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
-                .claim("userId", userId) // 这里需要根据实际情况获取用户ID
+                .claim("userId", userId.toString()) // 明确添加userId
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS256, Base64.getEncoder().encodeToString(secretKey.getBytes()))
+                .signWith(SignatureAlgorithm.HS256,
+                        Base64.getEncoder().encodeToString(secretKey.getBytes()))
                 .compact();
     }
 

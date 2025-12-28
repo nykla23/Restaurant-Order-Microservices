@@ -31,8 +31,10 @@ public class NotificationController {
      * 获取当前用户通知列表
      */
     @GetMapping
-    public ApiResponse<List<NotificationDTO>> getNotifications() {
-        Long userId = getCurrentUserId();
+    public ApiResponse<List<NotificationDTO>> getUserNotifications(
+            @RequestHeader("X-User-Id") String userIdStr) {
+
+        Long userId = Long.parseLong(userIdStr);
         log.info("获取用户通知列表，用户ID: {}", userId);
 
         List<NotificationDTO> notifications = notificationService.getUserNotifications(userId);
@@ -43,8 +45,10 @@ public class NotificationController {
      * 获取当前用户未读通知
      */
     @GetMapping("/unread")
-    public ApiResponse<List<NotificationDTO>> getUnreadNotifications() {
-        Long userId = getCurrentUserId();
+    public ApiResponse<List<NotificationDTO>> getUnreadNotifications(
+            @RequestHeader("X-User-Id") String userIdStr) {
+
+        Long userId = Long.parseLong(userIdStr);
         log.info("获取用户未读通知，用户ID: {}", userId);
 
         List<NotificationDTO> notifications = notificationService.getUnreadNotifications(userId);
@@ -55,21 +59,23 @@ public class NotificationController {
      * 获取通知统计
      */
     @GetMapping("/count")
-    public ApiResponse<NotificationCountDTO> getNotificationCount() {
-        Long userId = getCurrentUserId();
-        log.info("获取通知统计，用户ID: {}", userId);
+    public ApiResponse<NotificationCountDTO> getNotificationCount(
+            @RequestHeader("X-User-Id") String userIdStr) {
 
-        NotificationCountDTO count = notificationService.getNotificationCount(userId);
-        return ApiResponse.success(count);
+        Long userId = Long.parseLong(userIdStr);
+        NotificationCountDTO countDTO = notificationService.getNotificationCount(userId);
+        return ApiResponse.success(countDTO);
     }
 
     /**
      * 标记通知为已读
      */
     @PostMapping("/{notificationId}/read")
-    public ApiResponse<Void> markAsRead(@PathVariable Long notificationId) {
-        Long userId = getCurrentUserId();
-        log.info("标记通知为已读，通知ID: {}, 用户ID: {}", notificationId, userId);
+    public ApiResponse<Void> markAsRead(
+            @PathVariable Long notificationId,
+            @RequestHeader("X-User-Id") String userIdStr) {
+        Long userId = Long.parseLong(userIdStr);
+//        log.info("标记通知为已读，通知ID: {}, 用户ID: {}", notificationId, userId);
 
         notificationService.markAsRead(notificationId, userId);
         return ApiResponse.success("标记为已读成功", null);
@@ -79,9 +85,10 @@ public class NotificationController {
      * 标记所有通知为已读
      */
     @PostMapping("/read-all")
-    public ApiResponse<Void> markAllAsRead() {
-        Long userId = getCurrentUserId();
-        log.info("标记所有通知为已读，用户ID: {}", userId);
+    public ApiResponse<Void> markAllAsRead(
+            @RequestHeader("X-User-Id") String userIdStr) {
+        Long userId = Long.parseLong(userIdStr);
+//        log.info("标记所有通知为已读，用户ID: {}", userId);
 
         notificationService.markAllAsRead(userId);
         return ApiResponse.success("所有通知已标记为已读", null);
@@ -91,9 +98,11 @@ public class NotificationController {
      * 删除通知
      */
     @DeleteMapping("/{notificationId}")
-    public ApiResponse<Void> deleteNotification(@PathVariable Long notificationId) {
-        Long userId = getCurrentUserId();
-        log.info("删除通知，通知ID: {}, 用户ID: {}", notificationId, userId);
+    public ApiResponse<Void> deleteNotification(
+            @PathVariable Long notificationId,
+            @RequestHeader("X-User-Id") String userIdStr) {
+        Long userId = Long.parseLong(userIdStr);
+//        log.info("删除通知，通知ID: {}, 用户ID: {}", notificationId, userId);
 
         notificationService.deleteNotification(notificationId, userId);
         return ApiResponse.success("删除通知成功", null);

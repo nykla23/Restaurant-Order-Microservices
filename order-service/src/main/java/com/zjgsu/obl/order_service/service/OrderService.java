@@ -1,5 +1,4 @@
 package com.zjgsu.obl.order_service.service;
-import com.zjgsu.obl.order_service.client.UserClient;
 import com.zjgsu.obl.order_service.dto.dish.DishDTO;
 import com.zjgsu.obl.order_service.dto.order.*;
 import com.zjgsu.obl.order_service.event.EventPublisher;
@@ -12,7 +11,6 @@ import com.zjgsu.obl.order_service.respository.PaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,28 +36,27 @@ public class OrderService {
     @Autowired
     private DishService dishService;
 
-//    @Autowired
-//    private UserRepository userRepository;
-
     @Autowired
     private EventPublisher eventPublisher;
 
-    @Autowired
-    private UserClient userClient;
 
     /**
      * 创建订单
      */
     @Transactional
-    public OrderDTO createOrder(CreateOrderRequest request) {
-        log.info("创建订单，用户ID: {}", request.getUserId());
+    public OrderDTO createOrder(CreateOrderRequest request,Long currentUserId) {
+        log.info("创建订单，用户ID: {}", currentUserId);
 
-        // 验证用户是否存在
-        userClient.getUserById(request.getUserId());
+        // 验证：用户只能为自己创建订单
+        if (!currentUserId.equals(request.getUserId())) {
+            throw new RuntimeException("只能为自己创建订单");
+        }
+
+        // 注意：不再需要验证用户存在性，因为网关已经验证了
 
         // 创建订单实体
         Order order = new Order();
-        order.setUserId(request.getUserId());
+        order.setUserId(currentUserId);
         order.setTableNumber(request.getTableNumber());
         order.setSpecialInstructions(request.getSpecialInstructions());
         order.setStatus("PENDING");
@@ -147,10 +144,11 @@ public class OrderService {
     }
 
     /**
-     * 获取用户订单列表
+     * 获取用户订单列表 - 从请求头获取当前用户ID
      */
-    public List<OrderDTO> getUserOrders(Long userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
+    public List<OrderDTO> getUserOrders(Long currentUserId) {
+        // 直接使用当前用户ID查询，不需要验证
+        List<Order> orders = orderRepository.findByUserId(currentUserId);
         return orders.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -352,5 +350,20 @@ public class OrderService {
 
         return stats;
     }
+
+    /**
+     * 管理员获取所有订单（需要ADMIN角色）
+     */
+    public List<OrderDTO> getAllOrders(String currentUserRole) {
+        if (!"ADMIN".equals(currentUserRole)) {
+            throw new RuntimeException("需要管理员权限");
+        }
+
+        List<Order> orders = orderRepository.findAll();
+        return orders.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
 }
 
