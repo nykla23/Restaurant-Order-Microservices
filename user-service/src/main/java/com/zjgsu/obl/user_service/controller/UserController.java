@@ -22,13 +22,15 @@ public class UserController {
      * 查询指定用户（需要权限：管理员或用户自己）
      */
     @GetMapping("/{userId}")
-    public ApiResponse<UserDTO> getUser(@PathVariable Long userId,
-                                        @RequestHeader("X-User-Id") String currentUserIdStr,
-                                        @RequestHeader("X-User-Role") String currentUserRole) {
-        log.info("查询用户: {}, 请求者: {} (角色: {})", userId, currentUserIdStr, currentUserRole);
-        Long currentUserId = Long.parseLong(currentUserIdStr);
+    public ApiResponse<UserDTO> getUser(
+            @PathVariable Long userId,
+            @RequestHeader("X-User-Id") Long currentUserId,  // 从网关传递的用户ID
+            @RequestHeader("X-User-Role") String currentUserRole) {  // 从网关传递的用户角色
 
-        UserDTO userDTO = userService.getUserById(userId);
+        log.info("查询用户: {}，请求者: {} (角色: {})",
+                userId, currentUserId, currentUserRole);
+
+        UserDTO userDTO = userService.getUserById(userId, currentUserId, currentUserRole);
         return ApiResponse.success(userDTO);
     }
 

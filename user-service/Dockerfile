@@ -10,3 +10,6 @@ EXPOSE 8081
 
 # 运行应用
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
+
+

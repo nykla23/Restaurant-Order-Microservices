@@ -93,9 +93,9 @@ public class UserService {
     /**
      * 查询用户信息（网关已验证权限，这里只需要做最终检查）
      */
-    public UserDTO getUserById(Long userId) {
-        log.info("查询用户 - 请求者ID: {} (角色: {}), 目标用户ID: {}",
-                currentUserId, currentUserRole, userId);
+    public UserDTO getUserById(Long userId, Long currentUserId, String currentUserRole) {
+        log.info("查询用户 - 目标用户ID: {}, 请求者ID: {} (角色: {})",
+                userId, currentUserId, currentUserRole);
 
         // 查找目标用户
         User targetUser = userRepository.findById(userId)

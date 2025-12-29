@@ -192,8 +192,11 @@ public class NotificationService {
     public List<NotificationDTO> getUserNotifications(Long userId) {
         log.info("获取用户通知列表，用户ID: {}", userId);
 
-        Date now = new Date();
-        List<Notification> notifications = notificationRepository.findValidByUserId(userId, now);
+//        Date now = new Date();
+//        List<Notification> notifications = notificationRepository.findValidByUserId(userId, now);
+
+        // 方法一：使用简单的查询，不过滤过期时间
+         List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
         return notifications.stream()
                 .map(this::enrichNotification)
