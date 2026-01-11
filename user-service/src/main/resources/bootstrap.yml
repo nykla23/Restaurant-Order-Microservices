@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: user-service  # 修改为对应服务名
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:nacos:8848}
+        namespace: public
+        group: DEFAULT_GROUP
+      config:
+        server-addr: ${NACOS_SERVER:nacos:8848}
+        namespace: public
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        refresh-enabled: true

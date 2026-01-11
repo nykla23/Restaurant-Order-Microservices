@@ -57,10 +57,25 @@ public class Dish {
     protected void onCreate() {
         createdAt = new Date();
         updatedAt = new Date();
+        if (totalSold == null) {
+            totalSold = 0;
+        }
+        if (stock == null) {
+            stock = 0;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = new Date();
     }
+
+    public Integer getTotalSold() {
+        return totalSold != null ? totalSold : 0;
+    }
+
+    public void setTotalSold(Integer totalSold) {
+        this.totalSold = totalSold != null ? totalSold : 0;
+    }
+
 }

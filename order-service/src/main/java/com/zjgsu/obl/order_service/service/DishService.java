@@ -215,7 +215,14 @@ public class DishService {
 
             int newStock = dish.getStock() - quantity;
             dish.setStock(newStock);
-            dish.setTotalSold(dish.getTotalSold() + quantity);
+            // 修复：处理 totalSold 为 null 的情况
+            Integer totalSold = dish.getTotalSold();
+            if (totalSold == null) {
+                totalSold = 0;
+                log.info("菜品ID: {} 的 totalSold 为 null，已重置为 0", dishId);
+            }
+            dish.setTotalSold(totalSold + quantity);
+
             dishRepository.save(dish);
 
             // 记录库存变更日志

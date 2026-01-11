@@ -1,0 +1,70 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+      config:
+        server-addr: nacos:8848
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        namespace: public
+  datasource:
+    url: jdbc:mysql://mysql:3306/ro_notification_db?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
+order-service:
+  internal-url: http://order-service:8082
+
+service:
+  auth:
+    internal-key: restaurant-internal-2023
+
+jwt:
+  secret: restaurant-secret-key-monolithic
+  expiration: 86400000
+
+app:
+  notification:
+    expiration-days: 30
+    max-unread-count: 100
+  pagination:
+    default-page-size: 20
+    max-page-size: 100
+
+logging:
+  level:
+    com.restaurant: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  file:
+    name: logs/notification-service.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

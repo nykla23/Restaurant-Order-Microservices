@@ -1,75 +1,234 @@
 version: '3.8'
 
 services:
+  # MySQL 数据库 (主实例)
   mysql:
     image: mysql:8.4
-    container_name: ro-user-service-mysql
+    container_name: restaurant-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: ro_user_db
+      MYSQL_DATABASE: restaurant
+      TZ: Asia/Shanghai
     ports:
-      - "3307:3306"
+      - "3307:3306"  # 保持3307以避免冲突
     volumes:
-      - ./mysql-user-data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - restaurant-network
     restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_password"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
 
-  # Nacos
-  nacos:
-    image: nacos/nacos-server:v3.1.0
-    container_name: nacos
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: restaurant-rabbitmq
     environment:
-      - MODE=standalone
-      - SPRING_DATASOURCE_PLATFORM=mysql
-      - MYSQL_SERVICE_HOST=mysql
-      - MYSQL_SERVICE_DB_NAME=nacos_config
-      - MYSQL_SERVICE_PORT=3306
-      - MYSQL_SERVICE_USER=root
-      - MYSQL_SERVICE_PASSWORD=root_password
-      - NACOS_AUTH_ENABLE=false
-      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
-      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
-      - NACOS_AUTH_IDENTITY_VALUE=security
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: /
     ports:
-      - "8848:8848"
-      - "9848:9848"
-      - "9849:9849"
-    depends_on:
-      - mysql
+      - "5672:5672"    # AMQP协议端口
+      - "15672:15672"  # 管理界面端口
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - restaurant-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # User Service（如果要从Docker运行）
+  # Nacos 服务注册与配置中心
+  nacos:
+    image: nacos/nacos-server:v3.1.0
+    container_name: restaurant-nacos
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: root_password
+      NACOS_AUTH_ENABLE: true
+      NACOS_AUTH_TOKEN: restaurant-nacos-token-2023
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+    ports:
+      - "8848:8848"  # HTTP端口
+      - "9848:9848"  # gRPC端口
+      - "9849:9849"  # gRPC端口（用于raft）
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - nacos_logs:/home/nacos/logs
+      - nacos_data:/home/nacos/data
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # User Service
   user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile
-    container_name: ro-user-service
+    container_name: restaurant-user-service
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+      JAVA_OPTS: "-Xmx512m -Xms256m -Duser.timezone=Asia/Shanghai"
     depends_on:
-      - mysql
-      - nacos
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
     volumes:
-      - ./logs:/app/logs
+      - ./logs/user-service:/app/logs
     networks:
       - restaurant-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # Order Service
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: restaurant-order-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+      JAVA_OPTS: "-Xmx512m -Xms256m -Duser.timezone=Asia/Shanghai"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    volumes:
+      - ./logs/order-service:/app/logs
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: restaurant-notification-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+      JAVA_OPTS: "-Xmx512m -Xms256m -Duser.timezone=Asia/Shanghai"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    volumes:
+      - ./logs/notification-service:/app/logs
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # Gateway Service
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    container_name: restaurant-gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      JAVA_OPTS: "-Xmx512m -Xms256m -Duser.timezone=Asia/Shanghai"
+    depends_on:
+      nacos:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    volumes:
+      - ./logs/gateway-service:/app/logs
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 
 networks:
   restaurant-network:
     driver: bridge
+    name: restaurant-network
 
-
-
-    
+volumes:
+  mysql_data:
+    name: restaurant-mysql-data
+  rabbitmq_data:
+    name: restaurant-rabbitmq-data
+  nacos_logs:
+    name: restaurant-nacos-logs
+  nacos_data:
+    name: restaurant-nacos-data
